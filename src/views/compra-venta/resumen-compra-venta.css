@@ -1,0 +1,237 @@
+.cv-page{
+  max-width: 1360px;
+  margin: 16px auto 40px;
+  padding: 0 18px;
+  color: rgba(255,255,255,0.92);
+}
+
+.cv-title{
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
+.cv-subtitle{
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: rgba(255,255,255,0.62);
+}
+
+
+.cv-module{
+  margin: 14px auto 0;
+  max-width: 740px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+}
+
+
+.cv-moduleHead{
+  padding: 12px 14px;
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.cv-headLeft{
+  min-width: 260px;
+}
+
+.cv-headK{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.60);
+}
+
+.cv-headV{
+  margin-top: 4px;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cv-headMonth{
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.92);
+}
+
+
+.cv-badge{
+  display:inline-flex;
+  align-items:center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.95);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Acciones */
+.cv-headRight{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cv-btn{
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+}
+
+.cv-btn:hover{ background: rgba(255,255,255,0.10); }
+
+.cv-btnGhost{ background: transparent; }
+
+.cv-btnPrimary{
+  background: rgba(22,163,74,0.18);
+  border-color: rgba(22,163,74,0.35);
+}
+.cv-btnPrimary:hover{ background: rgba(22,163,74,0.24); }
+
+.cv-btn:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+.cv-moduleBody{
+  padding: 12px 14px 14px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px; 
+}
+
+/* Field */
+.cv-field{
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cv-label{
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.72);
+}
+
+.cv-input{
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(11,18,32,0.75);
+  color: rgba(255,255,255,0.92);
+  padding: 0 12px;
+  outline: none;
+}
+
+.cv-input:focus{
+  border-color: rgba(1,57,92,0.85);
+  box-shadow: 0 0 0 4px rgba(1,57,92,0.22);
+}
+
+.cv-help{
+  font-size: 12px;
+  color: rgba(255,255,255,0.52);
+  line-height: 1.35;
+}
+
+
+.cv-info{
+  border: 1px solid rgba(1,57,92,0.28);
+  background: rgba(1,57,92,0.14);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.cv-infoTop{
+  display:flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cv-infoK{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.62);
+}
+
+.cv-infoV{
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.95);
+}
+
+.cv-infoD{
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.70);
+  line-height: 1.35;
+}
+
+.cv-divider{
+  margin: 10px 0;
+  height: 1px;
+  background: rgba(255,255,255,0.10);
+}
+
+.cv-infoListT{
+  font-weight: 900;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.90);
+  margin-bottom: 6px;
+}
+
+.cv-ul{
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(255,255,255,0.78);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.pulse{
+  animation: cvPulse 220ms ease-out;
+}
+
+@keyframes cvPulse{
+  0%{ transform: translateY(0); opacity: .75; }
+  100%{ transform: translateY(0); opacity: 1; }
+}
+
+.cv-footHint{
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.62);
+  font-size: 12px;
+}
+
+.mono{ font-variant-numeric: tabular-nums; }
+
+/* Responsive */
+@media (max-width: 820px){
+  .cv-module{ max-width: 100%; }
+  .cv-moduleHead{ flex-direction: column; }
+  .cv-headRight{ justify-content: flex-start; }
+}
+
+
