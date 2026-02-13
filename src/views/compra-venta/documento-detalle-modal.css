@@ -1,0 +1,222 @@
+/* =========================
+   Documento Detalle Modal
+   Tema oscuro Contaplus (10/10)
+   ========================= */
+
+.ddm-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.55); /* ✅ se mantiene el fondo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+/* ✅ Un poco más grande para no perder info */
+.ddm-modal{
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(10,16,28,0.92);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.ddm-head{
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.ddm-titleWrap{
+  display:flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ddm-title{
+  font-weight: 1000;
+  font-size: 16px;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.2;
+  letter-spacing: .2px;
+}
+
+.ddm-subtitle{
+  font-size: 12px;
+  color: rgba(255,255,255,0.62);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ddm-loading{
+  color: rgba(255,255,255,0.78);
+  font-weight: 900;
+}
+
+/* Close button */
+.ddm-x{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.90);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 0;
+  font-weight: 900;
+}
+.ddm-x:hover{ background: rgba(255,255,255,0.10); }
+
+/* Body */
+.ddm-body{
+  padding: 16px;
+  overflow: auto;
+}
+
+/* Grid */
+.ddm-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Stack helper */
+.ddm-stack{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Cards */
+.ddm-card{
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ddm-cardHead{
+  padding: 10px 12px;
+  font-weight: 1000;
+  font-size: 13px;
+  color: rgba(255,255,255,0.90);
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Table-like block inside cards */
+.ddm-table{
+  padding: 10px 12px;
+}
+
+.ddm-row{
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.ddm-row:last-child{ border-bottom: 0; }
+
+.ddm-k{
+  font-size: 12px;
+  color: rgba(255,255,255,0.62);
+  font-weight: 900;
+}
+
+.ddm-v{
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+  text-align: right;
+}
+
+.ddm-money{
+  font-variant-numeric: tabular-nums;
+}
+
+/* ✅ “Monto total” más claro y mejor encerrado */
+.ddm-total{
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(34,197,94,0.22);
+  background: rgba(34,197,94,0.08);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+}
+.ddm-total .ddm-k{
+  color: rgba(34,197,94,0.90);
+  font-weight: 1000;
+}
+.ddm-total .ddm-v{
+  color: rgba(34,197,94,0.98);
+  font-weight: 1000;
+}
+
+/* Note */
+.ddm-note{
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.78);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  line-height: 1.35;
+}
+
+/* Footer */
+.ddm-foot{
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ddm-btn{
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  font-weight: 1000;
+  cursor: pointer;
+}
+.ddm-btn:hover{ background: rgba(255,255,255,0.10); }
+
+.ddm-btnDanger{
+  background: rgba(239,68,68,0.16);
+  border-color: rgba(239,68,68,0.32);
+}
+.ddm-btnDanger:hover{ background: rgba(239,68,68,0.22); }
+
+.mono{ font-variant-numeric: tabular-nums; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .ddm-modal{
+    width: min(980px, 96vw);
+  }
+  .ddm-grid{ grid-template-columns: 1fr; }
+  .ddm-row{ grid-template-columns: 1fr; }
+  .ddm-v{ text-align: left; }
+  .ddm-total{ grid-template-columns: 1fr; }
+}
+
+
