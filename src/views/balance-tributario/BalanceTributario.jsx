@@ -1,8 +1,9 @@
 "use client";
 
 import "./balance-tributario.css";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePeriodo } from "@/context/PeriodoContext";
 
 function fmtMonthLabel(yyyyMm) {
   if (!yyyyMm || !yyyyMm.includes("-")) return "—";
@@ -12,15 +13,14 @@ function fmtMonthLabel(yyyyMm) {
 }
 
 function monthToRange(yyyyMm) {
-  
   if (!yyyyMm || !yyyyMm.includes("-")) return { desde: "", hasta: "" };
   const [yStr, mStr] = yyyyMm.split("-");
   const y = Number(yStr);
-  const m = Number(mStr); 
+  const m = Number(mStr);
   if (!y || !m) return { desde: "", hasta: "" };
 
   const pad = (n) => String(n).padStart(2, "0");
-  const lastDay = new Date(y, m, 0).getDate(); 
+  const lastDay = new Date(y, m, 0).getDate();
   return {
     desde: `${y}-${pad(m)}-01`,
     hasta: `${y}-${pad(m)}-${pad(lastDay)}`,
@@ -30,9 +30,27 @@ function monthToRange(yyyyMm) {
 export default function BalanceTributario() {
   const router = useRouter();
 
-  
+  // ✅ PERIODO GLOBAL (Topbar)
+  const { periodo: periodoGlobal, ready: periodoReady } = usePeriodo();
+
   const [modoPeriodo, setModoPeriodo] = useState("mes"); // "mes" | "rango"
-  const [periodo, setPeriodo] = useState("2026-01"); // yyyy-mm
+
+  // ✅ Periodo local (solo para esta pantalla), sincronizado con global cuando corresponde
+  const [periodo, setPeriodo] = useState(periodoGlobal || ""); // yyyy-mm
+
+  // ✅ 1) Inicializar/actualizar periodo local cuando cargue el global
+  useEffect(() => {
+    if (!periodoReady) return;
+    // Si aún no hay periodo local, inicializa con global
+    if (!periodo) setPeriodo(periodoGlobal);
+  }, [periodoReady, periodoGlobal, periodo]);
+
+  // ✅ 2) Mantener sincronía en “modo mes”
+  useEffect(() => {
+    if (!periodoReady) return;
+    if (modoPeriodo !== "mes") return; // no pisar rango manual
+    setPeriodo(periodoGlobal);
+  }, [periodoReady, periodoGlobal, modoPeriodo]);
 
   const rangeFromMonth = useMemo(() => monthToRange(periodo), [periodo]);
 
@@ -83,7 +101,9 @@ export default function BalanceTributario() {
 
   const onReset = () => {
     setModoPeriodo("mes");
-    setPeriodo("2026-01");
+    // ✅ vuelve al global (mes actual o el que el usuario eligió)
+    setPeriodo(periodoGlobal);
+    // rango manual vuelve a defaults (puedes cambiarlo si quieres)
     setDesde("2026-01-01");
     setHasta("2026-01-31");
     setNivel(4);
@@ -100,7 +120,7 @@ export default function BalanceTributario() {
       hasta: realHasta,
       nivel: String(nivel),
       showCode: showCode ? "1" : "0",
-      salida: salida === "Vista previa" ? "preview" : salida.toLowerCase(), // preview|pdf|excel
+      salida: salida === "Vista previa" ? "preview" : salida.toLowerCase(),
     });
 
     router.push(`/contabilidad/balance-tributario/resultado?${qs.toString()}`);
@@ -121,7 +141,6 @@ export default function BalanceTributario() {
       </div>
 
       <div className="bt-panel">
-        {/* Resumen + acciones */}
         <div className="bt-topbar">
           <div className="bt-chips">
             <div className="bt-chip">
@@ -166,9 +185,7 @@ export default function BalanceTributario() {
           </div>
         </div>
 
-        {/* Cards */}
         <div className="bt-grid">
-          {/* Período */}
           <section className="bt-card bt-cardPrimary">
             <div className="bt-cardHead">
               <span className="bt-cardTitle">Período</span>
@@ -242,7 +259,6 @@ export default function BalanceTributario() {
             )}
           </section>
 
-          
           <section className="bt-card">
             <div className="bt-cardHead">
               <span className="bt-cardTitle">Opciones del balance</span>
@@ -277,7 +293,6 @@ export default function BalanceTributario() {
             </div>
           </section>
 
-          {/* Salida */}
           <section className="bt-card bt-cardLight">
             <div className="bt-cardHead">
               <span className="bt-cardTitle">Salida de archivo</span>

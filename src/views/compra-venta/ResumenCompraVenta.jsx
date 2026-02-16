@@ -4,15 +4,37 @@ import "./resumen-compra-venta.css";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+// ✅ usa tu picker bonito
+import PeriodPicker from "@/components/ui/PeriodPicker";
+
+// ✅ usa tu estado global (el mismo que usas en Topbar)
+import { usePeriodo } from "@/context/PeriodoContext";
+
+function getCurrentYYYYMM() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
 function monthLabel(ym) {
-  // ym: "YYYY-MM"
   if (!ym) return "—";
   const [y, m] = ym.split("-").map(Number);
   if (!y || !m) return ym;
 
   const months = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
   ];
   return `${months[m - 1]} de ${y}`;
 }
@@ -27,10 +49,15 @@ function toMMYYYY(ym) {
 export default function ResumenCompraVenta() {
   const router = useRouter();
 
-  
-  const [periodo, setPeriodo] = useState("2026-01");
+  // ✅ periodo global
+  const { periodo, setPeriodo } = usePeriodo();
 
-  
+  // (Opcional) Si por alguna razón viene vacío, lo normalizamos al mes actual
+  useEffect(() => {
+    if (!periodo) setPeriodo(getCurrentYYYYMM());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     setPulse(true);
@@ -47,7 +74,7 @@ export default function ResumenCompraVenta() {
     };
   }, [periodo]);
 
-  const onReset = () => setPeriodo("2026-01");
+  const onReset = () => setPeriodo(getCurrentYYYYMM());
 
   const onGenerate = () => {
     if (!canGenerate) return;
@@ -70,7 +97,6 @@ export default function ResumenCompraVenta() {
         </div>
       </header>
 
-     
       <section className="cv-module" aria-label="Resumen compra/venta">
         <div className="cv-moduleHead">
           <div className="cv-headLeft">
@@ -84,7 +110,11 @@ export default function ResumenCompraVenta() {
           </div>
 
           <div className="cv-headRight">
-            <button className="cv-btn cv-btnGhost" type="button" onClick={onReset}>
+            <button
+              className="cv-btn cv-btnGhost"
+              type="button"
+              onClick={onReset}
+            >
               Limpiar
             </button>
 
@@ -101,22 +131,21 @@ export default function ResumenCompraVenta() {
         </div>
 
         <div className="cv-moduleBody">
-          {/* Input */}
+          {/* ✅ Picker bonito, conectado al periodo global */}
           <div className="cv-field">
             <label className="cv-label">Período contable</label>
-            <input
-              type="month"
-              className="cv-input"
+
+            <PeriodPicker
               value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
+              onChange={setPeriodo}
+              label="" // ya tienes label arriba
             />
+
             <div className="cv-help">
-              Formato: <span className="mono">MM/AAAA</span> (ej:{" "}
-              <span className="mono">01/2026</span>).
+              Se aplica globalmente en el sistema (Topbar y vistas que lo usen).
             </div>
           </div>
 
-          
           <div className="cv-info">
             <div className="cv-infoTop">
               <div className="cv-infoK">Se generará el resumen para</div>
@@ -124,7 +153,8 @@ export default function ResumenCompraVenta() {
                 {resumen.periodoLabel}
               </div>
               <div className="cv-infoD">
-                El sistema utilizará este período para consolidar compras, ventas e impuestos.
+                El sistema utilizará este período para consolidar compras, ventas
+                e impuestos.
               </div>
             </div>
 
@@ -142,7 +172,8 @@ export default function ResumenCompraVenta() {
           </div>
 
           <div className="cv-footHint">
-            Más adelante: esta pantalla abrirá una segunda vista con el resultado y opción de exportar.
+            Más adelante: esta pantalla abrirá una segunda vista con el resultado
+            y opción de exportar.
           </div>
         </div>
       </section>

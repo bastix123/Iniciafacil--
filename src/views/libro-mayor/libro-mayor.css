@@ -144,7 +144,7 @@
 .lm-grid{
   padding: 14px;
   display:grid;
-  grid-template-columns: 1.15fr 1.35fr 1fr 1fr;
+  grid-template-columns: 1.15fr 1.35fr 1fr; /* ✅ antes 4 cols */
   gap: 14px;
 }
 
@@ -240,29 +240,6 @@
   box-shadow: 0 0 0 4px rgba(1,57,92,0.22);
 }
 
-.lm-input.invalid{
-  border-color: rgba(245,158,11,0.45);
-  box-shadow: 0 0 0 4px rgba(245,158,11,0.14);
-}
-
-.lm-row2{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.lm-inlineWarn{
-  grid-column: 1 / -1;
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(255,255,255,0.80);
-  border: 1px solid rgba(245,158,11,0.22);
-  background: rgba(245,158,11,0.08);
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-
-
 .lm-help{
   font-size: 12px;
   color: rgba(255,255,255,0.52);
@@ -343,7 +320,6 @@
   font-weight: 800;
 }
 
-
 .lm-ledgerHeader{
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(1,57,92,0.18);
@@ -422,7 +398,6 @@
   background: rgba(255,255,255,0.04);
 }
 
-
 .lm-rowInitial td{
   font-style: italic;
   color: rgba(255,255,255,0.70);
@@ -450,7 +425,6 @@
 @media (max-width: 1100px){
   .lm-grid{ grid-template-columns: 1fr; }
   .lm-metrics{ grid-template-columns: 1fr; }
-  .lm-row2{ grid-template-columns: 1fr; }
 
   .lm-panelTop{
     grid-template-columns: 1fr;

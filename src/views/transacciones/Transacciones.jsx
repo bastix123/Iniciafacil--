@@ -5,19 +5,40 @@ import "./transacciones.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useRouter, useSearchParams } from "next/navigation";
+import { usePeriodo } from "@/context/PeriodoContext";
 
 export default function Transacciones() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // ✅ Periodo global (YYYY-MM) desde Topbar
+  const { periodo: periodoGlobal } = usePeriodo();
+
+  // fallback por si aún no hay periodoGlobal
+  const getCurrentYM = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  };
+
+  // ✅ periodo base para defaults/reset
+  const defaultYM = periodoGlobal || getCurrentYM();
+
   const [tipo, setTipo] = useState("Todos");
 
-  
-  const [desde, setDesde] = useState("2026-01");
-  const [hasta, setHasta] = useState("2026-01");
+  // ✅ por defecto arrancan con el mes actual (luego se ajustan al periodo global si aplica)
+  const [desde, setDesde] = useState(getCurrentYM());
+  const [hasta, setHasta] = useState(getCurrentYM());
 
   const [qInput, setQInput] = useState("");
   const [qApplied, setQApplied] = useState("");
+
+  // Si el usuario toca manualmente desde/hasta, NO los sobreescribimos al cambiar periodoGlobal
+  const touchedDesdeHasta = useRef(false);
+
+  // Guardamos si la URL traía override de desde/hasta (para respetarlo)
+  const urlOverridesRef = useRef({ desde: false, hasta: false });
 
   // ---- 1) Cargar filtros iniciales desde URL (una sola vez) ----
   const didInitFromUrl = useRef(false);
@@ -30,9 +51,26 @@ export default function Transacciones() {
     const pHasta = searchParams.get("hasta");
     const pQ = searchParams.get("q");
 
+    // overrides por URL (si vienen, mandan)
+    urlOverridesRef.current = { desde: !!pDesde, hasta: !!pHasta };
+
     if (pTipo) setTipo(pTipo);
-    if (pDesde) setDesde(pDesde);
-    if (pHasta) setHasta(pHasta);
+
+    if (pDesde) {
+      setDesde(pDesde);
+      touchedDesdeHasta.current = true;
+    } else {
+      // si NO viene por URL, usamos periodo global (si existe) o mes actual
+      setDesde(defaultYM);
+    }
+
+    if (pHasta) {
+      setHasta(pHasta);
+      touchedDesdeHasta.current = true;
+    } else {
+      setHasta(defaultYM);
+    }
+
     if (pQ) {
       setQInput(pQ);
       setQApplied(pQ);
@@ -40,11 +78,26 @@ export default function Transacciones() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ---- 1.1) Si cambia el periodo global, sincronizar desde/hasta SOLO si:
+  // - la URL no los estaba forzando
+  // - el usuario no los tocó manualmente
+  useEffect(() => {
+    if (!didInitFromUrl.current) return;
+
+    const { desde: ovDesde, hasta: ovHasta } = urlOverridesRef.current;
+    if (ovDesde || ovHasta) return;
+    if (touchedDesdeHasta.current) return;
+
+    // sincroniza ambos al nuevo periodo global
+    setDesde(defaultYM);
+    setHasta(defaultYM);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultYM]);
+
   // ---- 2) Mantener URL sincronizada con filtros (para "volver con filtros") ----
   const buildQS = (next) => {
     const qs = new URLSearchParams();
 
-    // guardamos solo si tiene valor útil
     if (next.tipo && next.tipo !== "Todos") qs.set("tipo", next.tipo);
     if (next.desde) qs.set("desde", next.desde);
     if (next.hasta) qs.set("hasta", next.hasta);
@@ -53,25 +106,19 @@ export default function Transacciones() {
     return qs.toString();
   };
 
-  const didSyncUrl = useRef(false);
   useEffect(() => {
-    // Evita pisar la URL antes de inicializar desde URL
     if (!didInitFromUrl.current) return;
 
-    // Evita re-render loops: hacemos replace con un throttle leve
     const t = setTimeout(() => {
       const qs = buildQS({ tipo, desde, hasta, q: qApplied });
       const url = qs ? `/transacciones?${qs}` : `/transacciones`;
-
-      // si ya sincronizamos alguna vez, seguimos reemplazando sin agregar historial
       router.replace(url);
-      didSyncUrl.current = true;
     }, 120);
 
     return () => clearTimeout(t);
   }, [tipo, desde, hasta, qApplied, router]);
 
-  
+  // ✅ debounce búsqueda
   useEffect(() => {
     const t = setTimeout(() => {
       setQApplied(qInput.trim());
@@ -125,8 +172,13 @@ export default function Transacciones() {
 
   const limpiarFiltros = () => {
     setTipo("Todos");
-    setDesde("2026-01");
-    setHasta("2026-01");
+
+    // ✅ reset al periodo global
+    touchedDesdeHasta.current = false;
+    urlOverridesRef.current = { desde: false, hasta: false };
+
+    setDesde(defaultYM);
+    setHasta(defaultYM);
     limpiarBusqueda();
   };
 
@@ -142,7 +194,6 @@ export default function Transacciones() {
   const filtered = useMemo(() => {
     const qq = qApplied.toLowerCase();
 
-    
     const toYM = (ddmmyyyy) => {
       const parts = String(ddmmyyyy).split("/");
       const mm = parts?.[1];
@@ -162,13 +213,10 @@ export default function Transacciones() {
     return rows.filter((r) => {
       const tipoOk = tipo === "Todos" ? true : r.tipo === tipo;
       const periodoOk = inMonthRange(r.fecha);
-      const qOk = !qq
-        ? true
-        : `${r.id} ${r.desc} ${r.tipo}`.toLowerCase().includes(qq);
+      const qOk = !qq ? true : `${r.id} ${r.desc} ${r.tipo}`.toLowerCase().includes(qq);
       return tipoOk && periodoOk && qOk;
     });
   }, [rows, tipo, desde, hasta, qApplied]);
-
 
   const exportar = (formato) => {
     if (formato === "pdf") alert("Exportar PDF (pendiente)");
@@ -180,7 +228,6 @@ export default function Transacciones() {
     if (action === "eliminar") alert(`Eliminar ID ${row.id}`);
   };
 
- 
   const makeEditHref = (txId) => {
     const qs = buildQS({ tipo, desde, hasta, q: qApplied });
     return qs ? `/transacciones/${txId}/editar?${qs}` : `/transacciones/${txId}/editar`;
@@ -194,7 +241,6 @@ export default function Transacciones() {
           <p className="tx-subtitle">Buscar y Gestionar Comprobantes</p>
         </div>
 
-        {/* ✅ Exportar con dropdown PDF/Excel */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button className="tx-export" type="button">
@@ -204,12 +250,7 @@ export default function Transacciones() {
           </DropdownMenu.Trigger>
 
           <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              side="bottom"
-              align="end"
-              sideOffset={8}
-              className="tx-radix-menu"
-            >
+            <DropdownMenu.Content side="bottom" align="end" sideOffset={8} className="tx-radix-menu">
               <DropdownMenu.Item
                 className="tx-radix-item"
                 onSelect={(e) => {
@@ -240,11 +281,7 @@ export default function Transacciones() {
         <div className="tx-filters">
           <div className="tx-field">
             <label className="tx-label">Tipo</label>
-            <select
-              className="tx-input"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-            >
+            <select className="tx-input" value={tipo} onChange={(e) => setTipo(e.target.value)}>
               <option>Todos</option>
               <option>Ingreso</option>
               <option>Traspaso</option>
@@ -258,7 +295,10 @@ export default function Transacciones() {
               className="tx-input"
               type="month"
               value={desde}
-              onChange={(e) => setDesde(e.target.value)}
+              onChange={(e) => {
+                touchedDesdeHasta.current = true;
+                setDesde(e.target.value);
+              }}
             />
           </div>
 
@@ -268,7 +308,10 @@ export default function Transacciones() {
               className="tx-input"
               type="month"
               value={hasta}
-              onChange={(e) => setHasta(e.target.value)}
+              onChange={(e) => {
+                touchedDesdeHasta.current = true;
+                setHasta(e.target.value);
+              }}
             />
           </div>
 
@@ -287,21 +330,9 @@ export default function Transacciones() {
                 }}
               />
 
-              <button
-                type="button"
-                className="tx-searchIconBtn"
-                onClick={aplicarBusqueda}
-                aria-label="Buscar"
-              />
+              <button type="button" className="tx-searchIconBtn" onClick={aplicarBusqueda} aria-label="Buscar" />
 
-              {qInput && (
-                <button
-                  type="button"
-                  className="tx-clearBtn"
-                  onClick={limpiarBusqueda}
-                  aria-label="Limpiar"
-                />
-              )}
+              {qInput && <button type="button" className="tx-clearBtn" onClick={limpiarBusqueda} aria-label="Limpiar" />}
             </div>
           </div>
 
@@ -311,13 +342,7 @@ export default function Transacciones() {
               type="button"
               className="tx-btn tx-btn-ghost"
               onClick={limpiarFiltros}
-              disabled={
-                tipo === "Todos" &&
-                desde === "2026-01" &&
-                hasta === "2026-01" &&
-                !qInput &&
-                !qApplied
-              }
+              disabled={tipo === "Todos" && desde === defaultYM && hasta === defaultYM && !qInput && !qApplied}
             >
               Limpiar filtros
             </button>
@@ -356,9 +381,7 @@ export default function Transacciones() {
                     <td>{r.fecha}</td>
 
                     <td>
-                      <span className={`tx-tipo-pill is-${r.tipo.toLowerCase()}`}>
-                        {r.tipo}
-                      </span>
+                      <span className={`tx-tipo-pill is-${r.tipo.toLowerCase()}`}>{r.tipo}</span>
                     </td>
 
                     <td className="tx-desc" title={r.desc}>
@@ -368,21 +391,14 @@ export default function Transacciones() {
                     <td className="tx-right mono">$ {r.monto}</td>
 
                     <td className="tx-center">
-                      <span
-                        className={`tx-badge ${
-                          r.vig === "SI" ? "is-ok" : "is-warn"
-                        }`}
-                      >
+                      <span className={`tx-badge ${r.vig === "SI" ? "is-ok" : "is-warn"}`}>
                         {r.vig === "SI" ? "Vigente" : "No vigente"}
                       </span>
                     </td>
 
                     <td className="tx-center">
                       <div className="tx-actionsCell">
-                        <TxActionsMenu
-                          editHref={makeEditHref(r.id)}
-                          onAction={(action) => onRowAction(action, r)}
-                        />
+                        <TxActionsMenu editHref={makeEditHref(r.id)} onAction={(action) => onRowAction(action, r)} />
                       </div>
                     </td>
                   </tr>
@@ -393,14 +409,8 @@ export default function Transacciones() {
                     <td colSpan={7} className="tx-empty">
                       <div className="tx-emptyBox">
                         <div className="tx-emptyTitle">Sin resultados</div>
-                        <div className="tx-emptySub">
-                          Prueba ajustando el período, tipo o búsqueda.
-                        </div>
-                        <button
-                          type="button"
-                          className="tx-btn tx-btn-primary"
-                          onClick={limpiarFiltros}
-                        >
+                        <div className="tx-emptySub">Prueba ajustando el período, tipo o búsqueda.</div>
+                        <button type="button" className="tx-btn tx-btn-primary" onClick={limpiarFiltros}>
                           Limpiar filtros
                         </button>
                       </div>

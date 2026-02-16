@@ -2,10 +2,33 @@
 
 import "./libro-mayor.css";
 import { useMemo, useState } from "react";
+import PeriodPicker from "@/components/ui/PeriodPicker";
+import { usePeriodo } from "@/context/PeriodoContext";
 
 function fmtCL(n) {
   const v = Number(n || 0);
   return v.toLocaleString("es-CL");
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function monthToRange(yyyyMm) {
+  if (!yyyyMm || !yyyyMm.includes("-")) return { desde: "", hasta: "", label: "—" };
+  const [yStr, mStr] = yyyyMm.split("-");
+  const y = Number(yStr);
+  const m = Number(mStr);
+  if (!y || !m) return { desde: "", hasta: "", label: "—" };
+
+  const lastDay = new Date(y, m, 0).getDate(); // último día real del mes
+  const desde = `${y}-${pad2(m)}-01`;
+  const hasta = `${y}-${pad2(m)}-${pad2(lastDay)}`;
+
+  const d = new Date(y, m - 1, 1);
+  const label = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric" }).format(d);
+
+  return { desde, hasta, label };
 }
 
 // Demo cuentas (luego conectas a tu plan real / API)
@@ -50,12 +73,10 @@ function demoMayor({ desde, hasta, cuenta }) {
 }
 
 export default function LibroMayor() {
-  // Filtros
-  const [modoPeriodo, setModoPeriodo] = useState("Rango"); // "Rango" | "Mes"
-  const [desde, setDesde] = useState("2026-01-01");
-  const [hasta, setHasta] = useState("2026-01-31");
-  const [mes, setMes] = useState("2026-01"); // YYYY-MM
+  // ✅ Periodo GLOBAL (Topbar)
+  const { periodo: periodoGlobal, setPeriodo } = usePeriodo(); // "YYYY-MM"
 
+  // Opciones
   const [soloVigentes, setSoloVigentes] = useState(true);
   const [mostrarDetalle, setMostrarDetalle] = useState(true);
 
@@ -79,34 +100,16 @@ export default function LibroMayor() {
     const qq = qCuenta.trim().toLowerCase();
     if (!qq) return CUENTAS;
     return CUENTAS.filter(
-      (c) =>
-        c.codigo.toLowerCase().includes(qq) ||
-        c.nombre.toLowerCase().includes(qq)
+      (c) => c.codigo.toLowerCase().includes(qq) || c.nombre.toLowerCase().includes(qq)
     );
   }, [qCuenta]);
 
-  const periodo = useMemo(() => {
-    if (modoPeriodo === "Mes") {
-      const [y, m] = mes.split("-").map((x) => Number(x));
-      const first = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-01`;
-      // demo: 28 (en real: último día del mes)
-      const last = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-28`;
-      return { desde: first, hasta: last, label: `${mes}` };
-    }
-    return { desde, hasta, label: `${desde} → ${hasta}` };
-  }, [modoPeriodo, desde, hasta, mes]);
-
-  const rangoInvalido = useMemo(() => {
-    if (modoPeriodo !== "Rango") return false;
-    if (!desde || !hasta) return false;
-    return String(desde) > String(hasta);
-  }, [modoPeriodo, desde, hasta]);
+  // ✅ Período real desde el global
+  const periodo = useMemo(() => monthToRange(periodoGlobal), [periodoGlobal]);
 
   const canGenerate = useMemo(() => {
-    if (!cuenta) return false;
-    if (modoPeriodo === "Rango") return Boolean(desde && hasta && !rangoInvalido);
-    return Boolean(mes);
-  }, [cuenta, modoPeriodo, desde, hasta, mes, rangoInvalido]);
+    return Boolean(cuenta && periodo.desde && periodo.hasta);
+  }, [cuenta, periodo]);
 
   const payload = useMemo(() => {
     return {
@@ -144,10 +147,7 @@ export default function LibroMayor() {
   };
 
   const onReset = () => {
-    setModoPeriodo("Rango");
-    setDesde("2026-01-01");
-    setHasta("2026-01-31");
-    setMes("2026-01");
+    // ✅ Resetea solo filtros locales (el período global NO se toca acá)
     setSoloVigentes(true);
     setMostrarDetalle(true);
     setQCuenta("");
@@ -160,14 +160,9 @@ export default function LibroMayor() {
   // Estado UX
   const status = useMemo(() => {
     if (!cuenta) return { kind: "warn", text: "Selecciona una cuenta." };
-    if (modoPeriodo === "Rango") {
-      if (!desde || !hasta) return { kind: "warn", text: "Selecciona el rango de fechas." };
-      if (rangoInvalido) return { kind: "warn", text: "El rango es inválido: “Desde” es mayor que “Hasta”." };
-    } else {
-      if (!mes) return { kind: "warn", text: "Selecciona un mes/año." };
-    }
+    if (!periodoGlobal) return { kind: "warn", text: "Selecciona un mes/año." };
     return { kind: "ok", text: "Listo para generar." };
-  }, [cuenta, modoPeriodo, desde, hasta, mes, rangoInvalido]);
+  }, [cuenta, periodoGlobal]);
 
   const previewBtnLabel = preview ? "Actualizar preview" : "Generar vista previa";
 
@@ -177,7 +172,7 @@ export default function LibroMayor() {
         <div>
           <h1 className="lm-title">Libro mayor</h1>
           <p className="lm-subtitle">
-            Genera el libro mayor por período y cuenta. Puedes previsualizar antes de exportar.
+            Genera el libro mayor por período (global) y cuenta. Puedes previsualizar antes de exportar.
           </p>
         </div>
       </div>
@@ -226,68 +221,27 @@ export default function LibroMayor() {
 
         {/* Cards */}
         <div className="lm-grid">
-          {/* Período */}
+          {/* Período (solo Mes/Año) */}
           <section className="lm-card lm-cardPrimary">
             <div className="lm-cardHead">
               <span className="lm-cardTitle">Período</span>
-              <div className="lm-seg" role="tablist" aria-label="Modo de período">
-                <button
-                  type="button"
-                  className={`lm-segBtn ${modoPeriodo === "Rango" ? "active" : ""}`}
-                  onClick={() => setModoPeriodo("Rango")}
-                >
-                  Rango
-                </button>
-                <button
-                  type="button"
-                  className={`lm-segBtn ${modoPeriodo === "Mes" ? "active" : ""}`}
-                  onClick={() => setModoPeriodo("Mes")}
-                >
-                  Mes/Año
-                </button>
-              </div>
             </div>
 
-            {modoPeriodo === "Rango" ? (
-              <div className="lm-row2">
-                <div className="lm-field">
-                  <label className="lm-label">Desde</label>
-                  <input
-                    type="date"
-                    className={`lm-input ${rangoInvalido ? "invalid" : ""}`}
-                    value={desde}
-                    onChange={(e) => setDesde(e.target.value)}
-                  />
-                </div>
-                <div className="lm-field">
-                  <label className="lm-label">Hasta</label>
-                  <input
-                    type="date"
-                    className={`lm-input ${rangoInvalido ? "invalid" : ""}`}
-                    value={hasta}
-                    onChange={(e) => setHasta(e.target.value)}
-                  />
-                </div>
-                {rangoInvalido && (
-                  <div className="lm-inlineWarn">
-                    El rango es inválido. Revisa “Desde” y “Hasta”.
-                  </div>
-                )}
+            <div className="lm-field">
+              <label className="lm-label">Mes/Año (global)</label>
+
+              {/* ✅ Puedes cambiar el período desde esta vista también */}
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <PeriodPicker value={periodoGlobal} onChange={setPeriodo} label="Período" />
               </div>
-            ) : (
-              <div className="lm-field">
-                <label className="lm-label">Mes/Año</label>
-                <input
-                  type="month"
-                  className="lm-input"
-                  value={mes}
-                  onChange={(e) => setMes(e.target.value)}
-                />
-                <div className="lm-help">
-                  Usa Mes/Año para cierres mensuales y reportes recurrentes.
-                </div>
+
+              <div className="lm-help">
+                Se generará para:{" "}
+                <span className="mono">
+                  {periodo.desde} → {periodo.hasta}
+                </span>
               </div>
-            )}
+            </div>
           </section>
 
           {/* Cuenta */}
@@ -300,7 +254,9 @@ export default function LibroMayor() {
             <div className="lm-field">
               <label className="lm-label">Buscar cuenta</label>
               <div className="lm-search">
-                <span className="lm-searchIcon" aria-hidden="true">🔍</span>
+                <span className="lm-searchIcon" aria-hidden="true">
+                  🔍
+                </span>
                 <input
                   className="lm-searchInput"
                   value={qCuenta}
@@ -385,7 +341,6 @@ export default function LibroMayor() {
           </section>
         </div>
 
-        
         <div className="lm-preview">
           {!preview ? (
             <div className="lm-empty">
@@ -480,4 +435,5 @@ export default function LibroMayor() {
     </div>
   );
 }
+
 
