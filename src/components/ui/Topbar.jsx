@@ -19,26 +19,25 @@ export default function Topbar({ onMenuClick }) {
           <i className="bi bi-list" />
         </button>
 
-        <Link href="/" className="topbar-brandlink">
-          <div className="topbar-titles">
-            <div className="topbar-title">Iniciafacil</div>
-            <div className="topbar-subtitle">Panel</div>
+        <Link href="/" className="topbar-brandlink" aria-label="Ir al inicio">
+          <div className="topbar-brand">
+            <div className="topbar-logo">
+              <img src="/hola.png" alt="Logo Iniciafacil" />
+            </div>
+
+            <div className="topbar-titles">
+              <div className="topbar-title">Iniciafacil</div>
+              <div className="topbar-subtitle">Panel</div>
+            </div>
           </div>
         </Link>
       </div>
 
       <div className="topbar-right">
         <PeriodPicker value={periodo} onChange={setPeriodo} />
-
-        <button className="btn ghost" type="button">
-          Soporte
-        </button>
-
-        <button className="btn" type="button">
-          Mi cuenta
-        </button>
       </div>
     </header>
   );
 }
+
 

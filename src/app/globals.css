@@ -1,7 +1,7 @@
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
 :root{
-  --brand: #003F5C;       /* azul topbar */
+  --brand: #003F5C;
   --brand-deep: #002F45;
 
   --bg: #0b1220;
@@ -31,7 +31,6 @@ body{
     radial-gradient(900px 600px at 80% 10%, rgba(0,196,255,0.12), transparent 60%),
     var(--bg);
   color: var(--text);
-
   transition: margin-left 0.3s ease;
 }
 
@@ -72,17 +71,93 @@ a{ color: inherit; text-decoration: none; }
 }
 
 .topbar-left{ display:flex; gap: 12px; align-items:center; }
+.topbar-brandlink{
+  display: inline-flex;
+  align-items: center;
+}
 
-/* ✅ clave: alineación + evita “saltos” al enfocar */
+.topbar-brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.topbar-logo{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.topbar-logo img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+
 .topbar-right{
   display:flex;
   gap: 10px;
   align-items: center;
 }
 
-.topbar-titles{ line-height: 1.1; }
-.topbar-title{ font-weight: 900; font-size: 14px; letter-spacing: 0.2px; color: rgba(255,255,255,0.96); }
-.topbar-subtitle{ font-size: 12px; color: rgba(255,255,255,0.80); margin-top: 2px; }
+/* ✅ NUEVO: link + bloque brand (logo + textos) */
+.topbar-brandlink{
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  padding: 4px 6px;
+}
+.topbar-brandlink:hover{
+  background: rgba(255,255,255,0.10);
+}
+
+.topbar-brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ✅ NUEVO: contenedor logo */
+.topbar-logo{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 0 0 28px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.10);
+}
+
+.topbar-logo img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* si tu logo es cuadrado, queda perfecto */
+  display:block;
+}
+
+.topbar-titles{ line-height: 1.1; min-width: 0; }
+.topbar-title{
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  color: rgba(255,255,255,0.96);
+}
+.topbar-subtitle{
+  font-size: 12px;
+  color: rgba(255,255,255,0.80);
+  margin-top: 2px;
+}
 
 .menu-btn{
   font-size: 22px;
@@ -270,6 +345,8 @@ a{ color: inherit; text-decoration: none; }
   width: 28px;
   height: 28px;
 }
+
+/* ===== PeriodPicker (mantengo tu bloque tal cual) ===== */
 .period-wrap{
   display: inline-flex;
   align-items: center;
