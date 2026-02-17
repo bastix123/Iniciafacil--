@@ -5,8 +5,6 @@
   padding: 0 24px;
 }
 
-
-
 .tx-head{
   display:flex;
   align-items:flex-start;
@@ -41,9 +39,7 @@
   cursor: pointer;
 }
 
-.tx-export:hover{
-  background: #0b4f7a;
-}
+.tx-export:hover{ background: #0b4f7a; }
 
 .tx-export-ico{
   width: 22px;
@@ -54,21 +50,15 @@
   background: rgba(255,255,255,0.18);
 }
 
-
-
 .tx-panel{
   border: 1px solid rgba(255,255,255,0.08);
   background: #0e1726;
   border-radius: 18px;
   box-shadow: 0 18px 50px rgba(0,0,0,0.45);
   overflow: hidden;
-
-  
   display: flex;
   flex-direction: column;
 }
-
-
 
 .tx-filters{
   display: grid;
@@ -99,6 +89,7 @@
   color: rgba(255,255,255,0.70);
 }
 
+/* Inputs base */
 .tx-input{
   height: 40px;
   width: 100%;
@@ -119,6 +110,13 @@
   box-shadow: 0 0 0 4px rgba(1,57,92,0.25);
 }
 
+/* ✅ Mes/Año: tipografía más “elegante” y consistente */
+.tx-input-month{
+  letter-spacing: 0.35px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
 .tx-input[type="date"]::-webkit-calendar-picker-indicator,
 .tx-input[type="month"]::-webkit-calendar-picker-indicator{
   filter: invert(1);
@@ -130,13 +128,7 @@
   opacity: 1;
 }
 
-
-.tx-input[type="month"]{
-  letter-spacing: 0.2px;
-}
-
-
-
+/* Search */
 .tx-searchBox{
   position: relative;
   width: 100%;
@@ -196,8 +188,7 @@
   opacity: 1;
 }
 
-
-
+/* Table */
 .tx-tableWrap{
   padding: 14px;
   flex: 1;
@@ -205,7 +196,6 @@
   position: relative;
   z-index: 1;
 }
-
 
 .tx-tableArea{
   height: 100%;
@@ -233,7 +223,6 @@
   background: rgba(255,255,255,0.04);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   text-align: left;
-
 
   position: sticky;
   top: 0;
@@ -270,14 +259,20 @@
 .tx-right{ text-align: right; }
 .mono{ font-variant-numeric: tabular-nums; }
 
+/* ✅ Fecha en tabla con numerales consistentes */
+.tx-date{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.25px;
+  color: rgba(255,255,255,0.86);
+}
+
 .tx-desc{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-
-
+/* Pills / badges */
 .tx-tipo-pill{
   display: inline-flex;
   align-items: center;
@@ -303,7 +298,6 @@
   border-color: rgba(255, 100, 100, 0.28);
 }
 
-
 .tx-actionsCell{
   display: inline-flex;
   align-items: center;
@@ -311,12 +305,12 @@
   width: 100%;
 }
 
-
-
+/* Footer */
 .tx-footer{
   display:flex;
   align-items:center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
   border-top: 1px solid rgba(255,255,255,0.08);
 }
@@ -326,7 +320,19 @@
   color: rgba(255,255,255,0.60);
 }
 
-/* Alineación/centrado por columnas */
+.tx-footRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.tx-footLabel{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.60);
+}
+
+/* Alineación columnas especiales */
 .tx-table th:nth-child(6),
 .tx-table td:nth-child(6),
 .tx-table th:nth-child(7),
@@ -341,7 +347,7 @@
   vertical-align: middle;
 }
 
-
+/* Buttons */
 .tx-btn{
   height: 40px;
   padding: 0 14px;
@@ -360,13 +366,9 @@
   cursor: not-allowed;
 }
 
-.tx-btn-ghost{
-  background: transparent;
-}
+.tx-btn-ghost{ background: transparent; }
 
-.tx-btn-ghost:hover{
-  background: rgba(255,255,255,0.06);
-}
+.tx-btn-ghost:hover{ background: rgba(255,255,255,0.06); }
 
 .tx-btn-primary{
   background: #01395C;
@@ -375,7 +377,7 @@
 
 .tx-btn-primary:hover{ background: #0b4f7a; }
 
-
+/* Chips */
 .tx-chips{
   display: flex;
   flex-wrap: wrap;
@@ -396,7 +398,6 @@
   font-weight: 800;
   color: rgba(255,255,255,0.78);
 }
-
 
 .tx-badge{
   display: inline-flex;
@@ -421,7 +422,6 @@
   color: rgba(255,255,255,0.92);
 }
 
-
 .tx-emptyBox{
   display: grid;
   place-items: center;
@@ -439,31 +439,12 @@
   color: rgba(255,255,255,0.60);
 }
 
-
 .tx-field-actions{
   min-width: 160px;
   align-self: end;
 }
 
-/* Botón ⋮ */
-.tx-dots{
-  width: 36px;
-  height: 32px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.92);
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 0;
-}
-
-.tx-dots:hover{
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(1,57,92,0.55);
-}
-
-/* Menú Radix */
+/* Menú Radix (export) */
 .tx-radix-menu{
   min-width: 170px;
   background: #0b1220;
@@ -474,7 +455,6 @@
   z-index: 9999;
 }
 
-/* Flecha del dropdown (Radix) */
 .tx-radix-arrow{
   fill: #0b1220;
   stroke: rgba(255,255,255,0.12);
@@ -495,13 +475,87 @@
   background: rgba(255,255,255,0.08);
 }
 
-.tx-radix-item.danger{
-  color: #ff6b6b;
+/* ==================================================
+   ✅ Radix Select (Tipo / Mostrar)
+   ================================================== */
+
+.tx-selectTrigger{
+  height: 40px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #0b1220;
+  color: rgba(255,255,255,0.92);
+  outline: none;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 850;
 }
 
-.tx-radix-sep{
-  height: 1px;
-  background: rgba(255,255,255,0.10);
-  margin: 6px 4px;
+.tx-selectTrigger:hover{
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.03);
+}
+
+.tx-selectTrigger:focus{
+  border-color: #01395C;
+  box-shadow: 0 0 0 4px rgba(1,57,92,0.25);
+}
+
+.tx-selectIcon{
+  opacity: 0.75;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tx-selectContent{
+  background: #0b1220;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.tx-selectViewport{
+  padding: 6px;
+}
+
+.tx-selectItem{
+  height: 38px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  padding: 0 10px;
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  outline: none;
+}
+
+.tx-selectItem:hover,
+.tx-selectItem[data-highlighted]{
+  background: rgba(255,255,255,0.08);
+}
+
+.tx-selectCheck{
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.tx-selectArrow{
+  fill: #0b1220;
+  stroke: rgba(255,255,255,0.12);
+  stroke-width: 1;
+}
+
+@media (max-width: 1100px){
+  .tx-footRight{ width: 100%; justify-content: flex-end; }
 }
 

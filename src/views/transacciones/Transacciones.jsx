@@ -4,17 +4,62 @@ import TxActionsMenu from "@/components/ui/TxActionsMenu";
 import "./transacciones.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Select from "@radix-ui/react-select";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePeriodo } from "@/context/PeriodoContext";
+
+/* ✅ mismo datepicker tipo “Período” (mes/año) */
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import es from "date-fns/locale/es";
+registerLocale("es", es);
+
+function RadixSelect({ value, onValueChange, placeholder, items, ariaLabel }) {
+  return (
+    <Select.Root value={value} onValueChange={onValueChange}>
+      <Select.Trigger className="tx-selectTrigger" aria-label={ariaLabel}>
+        <Select.Value placeholder={placeholder} />
+        <Select.Icon className="tx-selectIcon">▾</Select.Icon>
+      </Select.Trigger>
+
+      <Select.Portal>
+        <Select.Content className="tx-selectContent" position="popper" sideOffset={8}>
+          <Select.Viewport className="tx-selectViewport">
+            {items.map((it) => (
+              <Select.Item key={it.value} value={it.value} className="tx-selectItem">
+                <Select.ItemText>{it.label}</Select.ItemText>
+                <Select.ItemIndicator className="tx-selectCheck">✓</Select.ItemIndicator>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+
+          <Select.Arrow className="tx-selectArrow" />
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
+/* ✅ helpers YM <-> Date */
+function ymToDate(ym) {
+  if (!ym || !String(ym).includes("-")) return null;
+  const [y, m] = String(ym).split("-").map(Number);
+  if (!y || !m) return null;
+  return new Date(y, m - 1, 1);
+}
+function dateToYM(d) {
+  if (!(d instanceof Date) || isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
 
 export default function Transacciones() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ Periodo global (YYYY-MM) desde Topbar
   const { periodo: periodoGlobal } = usePeriodo();
 
-  // fallback por si aún no hay periodoGlobal
   const getCurrentYM = () => {
     const d = new Date();
     const y = d.getFullYear();
@@ -22,25 +67,22 @@ export default function Transacciones() {
     return `${y}-${m}`;
   };
 
-  // ✅ periodo base para defaults/reset
   const defaultYM = periodoGlobal || getCurrentYM();
 
   const [tipo, setTipo] = useState("Todos");
 
-  // ✅ por defecto arrancan con el mes actual (luego se ajustan al periodo global si aplica)
   const [desde, setDesde] = useState(getCurrentYM());
   const [hasta, setHasta] = useState(getCurrentYM());
 
   const [qInput, setQInput] = useState("");
   const [qApplied, setQApplied] = useState("");
 
-  // Si el usuario toca manualmente desde/hasta, NO los sobreescribimos al cambiar periodoGlobal
-  const touchedDesdeHasta = useRef(false);
+  // ✅ Mostrar (page size)
+  const [pageSize, setPageSize] = useState("10");
 
-  // Guardamos si la URL traía override de desde/hasta (para respetarlo)
+  const touchedDesdeHasta = useRef(false);
   const urlOverridesRef = useRef({ desde: false, hasta: false });
 
-  // ---- 1) Cargar filtros iniciales desde URL (una sola vez) ----
   const didInitFromUrl = useRef(false);
   useEffect(() => {
     if (didInitFromUrl.current) return;
@@ -50,8 +92,8 @@ export default function Transacciones() {
     const pDesde = searchParams.get("desde");
     const pHasta = searchParams.get("hasta");
     const pQ = searchParams.get("q");
+    const pShow = searchParams.get("show");
 
-    // overrides por URL (si vienen, mandan)
     urlOverridesRef.current = { desde: !!pDesde, hasta: !!pHasta };
 
     if (pTipo) setTipo(pTipo);
@@ -60,7 +102,6 @@ export default function Transacciones() {
       setDesde(pDesde);
       touchedDesdeHasta.current = true;
     } else {
-      // si NO viene por URL, usamos periodo global (si existe) o mes actual
       setDesde(defaultYM);
     }
 
@@ -75,12 +116,13 @@ export default function Transacciones() {
       setQInput(pQ);
       setQApplied(pQ);
     }
+
+    if (pShow && ["10", "25", "50", "100"].includes(pShow)) {
+      setPageSize(pShow);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- 1.1) Si cambia el periodo global, sincronizar desde/hasta SOLO si:
-  // - la URL no los estaba forzando
-  // - el usuario no los tocó manualmente
   useEffect(() => {
     if (!didInitFromUrl.current) return;
 
@@ -88,13 +130,11 @@ export default function Transacciones() {
     if (ovDesde || ovHasta) return;
     if (touchedDesdeHasta.current) return;
 
-    // sincroniza ambos al nuevo periodo global
     setDesde(defaultYM);
     setHasta(defaultYM);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultYM]);
 
-  // ---- 2) Mantener URL sincronizada con filtros (para "volver con filtros") ----
   const buildQS = (next) => {
     const qs = new URLSearchParams();
 
@@ -102,6 +142,7 @@ export default function Transacciones() {
     if (next.desde) qs.set("desde", next.desde);
     if (next.hasta) qs.set("hasta", next.hasta);
     if (next.q) qs.set("q", next.q);
+    if (next.show) qs.set("show", next.show);
 
     return qs.toString();
   };
@@ -110,15 +151,14 @@ export default function Transacciones() {
     if (!didInitFromUrl.current) return;
 
     const t = setTimeout(() => {
-      const qs = buildQS({ tipo, desde, hasta, q: qApplied });
+      const qs = buildQS({ tipo, desde, hasta, q: qApplied, show: pageSize });
       const url = qs ? `/transacciones?${qs}` : `/transacciones`;
       router.replace(url);
     }, 120);
 
     return () => clearTimeout(t);
-  }, [tipo, desde, hasta, qApplied, router]);
+  }, [tipo, desde, hasta, qApplied, pageSize, router]);
 
-  // ✅ debounce búsqueda
   useEffect(() => {
     const t = setTimeout(() => {
       setQApplied(qInput.trim());
@@ -172,8 +212,6 @@ export default function Transacciones() {
 
   const limpiarFiltros = () => {
     setTipo("Todos");
-
-    // ✅ reset al periodo global
     touchedDesdeHasta.current = false;
     urlOverridesRef.current = { desde: false, hasta: false };
 
@@ -188,8 +226,9 @@ export default function Transacciones() {
     if (desde) chips.push({ k: "desde", label: `Desde: ${desde}` });
     if (hasta) chips.push({ k: "hasta", label: `Hasta: ${hasta}` });
     if (qApplied) chips.push({ k: "q", label: `Buscar: ${qApplied}` });
+    if (pageSize) chips.push({ k: "show", label: `Mostrar: ${pageSize}` });
     return chips;
-  }, [tipo, desde, hasta, qApplied]);
+  }, [tipo, desde, hasta, qApplied, pageSize]);
 
   const filtered = useMemo(() => {
     const qq = qApplied.toLowerCase();
@@ -218,6 +257,10 @@ export default function Transacciones() {
     });
   }, [rows, tipo, desde, hasta, qApplied]);
 
+  // ✅ “Mostrar” aplica a tabla
+  const pageSizeNum = Number(pageSize) || 10;
+  const visibleRows = useMemo(() => filtered.slice(0, pageSizeNum), [filtered, pageSizeNum]);
+
   const exportar = (formato) => {
     if (formato === "pdf") alert("Exportar PDF (pendiente)");
     if (formato === "excel") alert("Exportar Excel (pendiente)");
@@ -229,9 +272,23 @@ export default function Transacciones() {
   };
 
   const makeEditHref = (txId) => {
-    const qs = buildQS({ tipo, desde, hasta, q: qApplied });
+    const qs = buildQS({ tipo, desde, hasta, q: qApplied, show: pageSize });
     return qs ? `/transacciones/${txId}/editar?${qs}` : `/transacciones/${txId}/editar`;
   };
+
+  const tipoItems = [
+    { value: "Todos", label: "Todos" },
+    { value: "Ingreso", label: "Ingreso" },
+    { value: "Traspaso", label: "Traspaso" },
+    { value: "Egreso", label: "Egreso" },
+  ];
+
+  const showItems = [
+    { value: "10", label: "10" },
+    { value: "25", label: "25" },
+    { value: "50", label: "50" },
+    { value: "100", label: "100" },
+  ];
 
   return (
     <div className="tx-page">
@@ -281,38 +338,49 @@ export default function Transacciones() {
         <div className="tx-filters">
           <div className="tx-field">
             <label className="tx-label">Tipo</label>
-            <select className="tx-input" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-              <option>Todos</option>
-              <option>Ingreso</option>
-              <option>Traspaso</option>
-              <option>Egreso</option>
-            </select>
+            <RadixSelect value={tipo} onValueChange={setTipo} placeholder="Selecciona tipo" items={tipoItems} ariaLabel="Tipo" />
           </div>
 
           <div className="tx-field">
             <label className="tx-label">Desde (mes/año)</label>
-            <input
-              className="tx-input"
-              type="month"
-              value={desde}
-              onChange={(e) => {
-                touchedDesdeHasta.current = true;
-                setDesde(e.target.value);
-              }}
-            />
+
+            <div className="tx-periodWrap">
+              <DatePicker
+                selected={ymToDate(desde)}
+                onChange={(date) => {
+                  touchedDesdeHasta.current = true;
+                  setDesde(dateToYM(date));
+                }}
+                dateFormat="MMMM yyyy"
+                showMonthYearPicker
+                showPopperArrow={false}
+                locale="es"
+                popperPlacement="bottom-start"
+                wrapperClassName="tx-dpWrap"
+                className="tx-input tx-input-month"
+              />
+            </div>
           </div>
 
           <div className="tx-field">
             <label className="tx-label">Hasta (mes/año)</label>
-            <input
-              className="tx-input"
-              type="month"
-              value={hasta}
-              onChange={(e) => {
-                touchedDesdeHasta.current = true;
-                setHasta(e.target.value);
-              }}
-            />
+
+            <div className="tx-periodWrap">
+              <DatePicker
+                selected={ymToDate(hasta)}
+                onChange={(date) => {
+                  touchedDesdeHasta.current = true;
+                  setHasta(dateToYM(date));
+                }}
+                dateFormat="MMMM yyyy"
+                showMonthYearPicker
+                showPopperArrow={false}
+                locale="es"
+                popperPlacement="bottom-start"
+                wrapperClassName="tx-dpWrap"
+                className="tx-input tx-input-month"
+              />
+            </div>
           </div>
 
           <div className="tx-field">
@@ -331,7 +399,6 @@ export default function Transacciones() {
               />
 
               <button type="button" className="tx-searchIconBtn" onClick={aplicarBusqueda} aria-label="Buscar" />
-
               {qInput && <button type="button" className="tx-clearBtn" onClick={limpiarBusqueda} aria-label="Limpiar" />}
             </div>
           </div>
@@ -342,7 +409,7 @@ export default function Transacciones() {
               type="button"
               className="tx-btn tx-btn-ghost"
               onClick={limpiarFiltros}
-              disabled={tipo === "Todos" && desde === defaultYM && hasta === defaultYM && !qInput && !qApplied}
+              disabled={tipo === "Todos" && desde === defaultYM && hasta === defaultYM && !qInput && !qApplied && pageSize === "10"}
             >
               Limpiar filtros
             </button>
@@ -375,10 +442,10 @@ export default function Transacciones() {
               </thead>
 
               <tbody>
-                {filtered.map((r, idx) => (
+                {visibleRows.map((r, idx) => (
                   <tr key={`${r.id}-${idx}`}>
                     <td className="mono">{r.id}</td>
-                    <td>{r.fecha}</td>
+                    <td className="tx-date">{r.fecha}</td>
 
                     <td>
                       <span className={`tx-tipo-pill is-${r.tipo.toLowerCase()}`}>{r.tipo}</span>
@@ -391,9 +458,7 @@ export default function Transacciones() {
                     <td className="tx-right mono">$ {r.monto}</td>
 
                     <td className="tx-center">
-                      <span className={`tx-badge ${r.vig === "SI" ? "is-ok" : "is-warn"}`}>
-                        {r.vig === "SI" ? "Vigente" : "No vigente"}
-                      </span>
+                      <span className={`tx-badge ${r.vig === "SI" ? "is-ok" : "is-warn"}`}>{r.vig === "SI" ? "Vigente" : "No vigente"}</span>
                     </td>
 
                     <td className="tx-center">
@@ -423,9 +488,18 @@ export default function Transacciones() {
         </div>
 
         <div className="tx-footer">
-          <div className="tx-footLeft">Mostrando {filtered.length} resultados</div>
+          <div className="tx-footLeft">
+            Mostrando <span className="mono">{Math.min(visibleRows.length, filtered.length)}</span> de <span className="mono">{filtered.length}</span> resultados
+          </div>
+
+          <div className="tx-footRight">
+            <span className="tx-footLabel">Mostrar</span>
+            <RadixSelect value={pageSize} onValueChange={setPageSize} placeholder="10" items={showItems} ariaLabel="Mostrar cantidad" />
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+
