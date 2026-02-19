@@ -313,3 +313,192 @@
     max-width: 360px;
   }
 }
+
+/* =========================
+   Radix Select (NuevaTransaccion)
+   ========================= */
+
+.nt-selectTrigger{
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  outline: none;
+}
+
+.nt-selectTrigger.is-sm{
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+}
+
+.nt-selectTrigger[data-disabled]{
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.nt-selectIcon{
+  opacity: 0.85;
+  font-size: 12px;
+}
+
+.nt-selectContent{
+  z-index: 50;
+  min-width: 240px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(18,18,18,0.98);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+
+.nt-selectViewport{
+  padding: 8px;
+}
+
+.nt-selectItem{
+  border-radius: 10px;
+  padding: 10px 10px;
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+}
+
+.nt-selectItem[data-highlighted]{
+  background: rgba(255,255,255,0.08);
+}
+
+.nt-selectItem[data-state="checked"]{
+  background: rgba(255,255,255,0.10);
+}
+
+.nt-selectCheck{
+  opacity: 0.9;
+  font-size: 12px;
+}
+
+.nt-selectArrow{
+  fill: rgba(18,18,18,0.98);
+}
+/* fila del título "DETALLE" */
+.nt-sectionTitleRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* bloque de "Líneas: x/y" + botón */
+.nt-rowMeta{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  /* 👇 esto lo mueve hacia la izquierda (ajusta el número) */
+  padding-right: 18px;
+}
+.nt-alert{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  margin: 14px 0;
+  padding: 12px 14px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+
+  box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+}
+
+.nt-alertIcon{
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  font-weight: 800;
+  line-height: 1;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.92);
+}
+
+.nt-alertBody{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nt-alertTitle{
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 2px;
+}
+
+.nt-alertSub{
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.72);
+}
+
+.nt-alertActions{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nt-alertBtn{
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nt-alertBtn:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nt-alertClose{
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+}
+
+/* Variantes */
+.nt-alert--error{
+  border-color: rgba(255, 82, 82, 0.28);
+  background: rgba(255, 82, 82, 0.10);
+}
+.nt-alert--warn{
+  border-color: rgba(255, 190, 92, 0.26);
+  background: rgba(255, 190, 92, 0.10);
+}
+.nt-alert--ok{
+  border-color: rgba(78, 220, 160, 0.24);
+  background: rgba(78, 220, 160, 0.10);
+}
+.nt-alert--info{
+  border-color: rgba(120, 180, 255, 0.22);
+  background: rgba(120, 180, 255, 0.08);
+}
