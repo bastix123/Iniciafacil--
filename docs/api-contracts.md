@@ -310,7 +310,6 @@ GET /api/transacciones/{id}
 - 404: Transacción no existe
 - 409: Conflicto (periodo cerrado / transacción bloqueada)
 
-
 ---
 
 ## 1️⃣1️⃣ Actualizar transacción
@@ -353,8 +352,6 @@ PUT /api/transacciones/{id}
 - payload: JSON (mismo formato anterior)
 - file: PDF (máx. 4MB)
 
----
-
 ### Reglas de negocio (Backend debe validar)
 
 - tipo obligatorio.
@@ -371,8 +368,6 @@ PUT /api/transacciones/{id}
   - Debe ser PDF.
   - Máximo 4MB.
 
----
-
 ### Response 200
 
 {
@@ -387,7 +382,6 @@ PUT /api/transacciones/{id}
 - 409: Conflicto (periodo cerrado / estado inválido).
 - 413: Archivo demasiado grande.
 - 415: Tipo de archivo inválido.
-
 
 ---
 
@@ -414,3 +408,219 @@ POST /api/transacciones/{id}/adjuntos
 - 413: Archivo demasiado grande.
 - 415: Tipo inválido (no PDF).
 
+---
+
+# ================================
+# LIBRO MAYOR
+# ================================
+
+## 1️⃣3️⃣ Buscar / listar cuentas imputables (para selector)
+
+GET /api/cuentas
+
+> Se usa para poblar el selector de “Cuenta” (modo Por cuenta).
+> Idealmente soporta búsqueda por código/nombre y filtro imputable.
+
+### Query Params
+
+- q: string (opcional) → busca por código o nombre
+- imputable: boolean (opcional) → true para solo imputables
+- limit: number (opcional) → default 50
+
+### Response 200
+
+{
+  "items": [
+    {
+      "codigo": "1101-01",
+      "nombre": "Caja",
+      "imputable": true
+    }
+  ]
+}
+
+---
+
+## 1️⃣4️⃣ Generar vista previa del Libro Mayor (por cuenta)
+
+POST /api/libro-mayor/preview
+
+> Genera datos para la vista previa (tabla + métricas) SOLO para una cuenta imputable.
+
+### Body (application/json)
+
+{
+  "periodo": "2025-12",
+  "desde": "2025-12-01",
+  "hasta": "2025-12-31",
+  "cuentaCodigo": "1101-01",
+  "filtros": {
+    "soloVigentes": true,
+    "mostrarDetalle": true
+  }
+}
+
+### Response 200
+
+{
+  "cuenta": {
+    "codigo": "1101-01",
+    "nombre": "Caja"
+  },
+  "periodo": {
+    "value": "2025-12",
+    "desde": "2025-12-01",
+    "hasta": "2025-12-31",
+    "label": "diciembre 2025"
+  },
+  "saldoInicial": 109020,
+  "totalDebe": 10860,
+  "totalHaber": 10860,
+  "saldoFinal": 109020,
+  "rows": [
+    {
+      "fecha": "2025-12-01",
+      "glosa": "Saldo inicial",
+      "documento": "-",
+      "debe": 0,
+      "haber": 0,
+      "saldo": 109020,
+      "inicial": true
+    },
+    {
+      "fecha": "2025-12-30",
+      "glosa": "Movimiento 1",
+      "documento": "COMP-1001",
+      "debe": 10860,
+      "haber": 0,
+      "saldo": 119880
+    }
+  ]
+}
+
+### Reglas de negocio (Backend debe validar)
+
+- `periodo` obligatorio (YYYY-MM) y coherente con `desde/hasta` (mismo mes).
+- `desde` y `hasta` obligatorios (YYYY-MM-DD) y deben pertenecer al período.
+- `cuentaCodigo` obligatorio y debe existir y ser **Imputable**.
+- Si `soloVigentes=true`, excluir transacciones anuladas/no vigentes.
+- Si `mostrarDetalle=false`, backend puede:
+  - devolver `rows` vacío y solo métricas, o
+  - devolver movimientos agregados (definir criterio).
+  (Recomendación: para preview mantener `rows` siempre, y usar `mostrarDetalle` para export.)
+
+### Errores
+
+- 400: Validación (periodo inválido, cuenta inválida, etc.)
+- 404: Cuenta no existe
+- 409: Conflicto (período cerrado / usuario sin acceso, etc.)
+
+---
+
+## 1️⃣5️⃣ Exportar Libro Mayor (por cuenta o completo)
+
+POST /api/libro-mayor/export
+
+> Exporta el Libro Mayor a PDF o Excel.
+> - Modo "Por cuenta": exporta SOLO la cuenta indicada.
+> - Modo "Completo": exporta TODAS las cuentas imputables (puede ser archivo grande).
+
+### Body (application/json)
+
+{
+  "periodo": "2025-12",
+  "desde": "2025-12-01",
+  "hasta": "2025-12-31",
+  "modo": "Por cuenta",
+  "cuentaCodigo": "1101-01",
+  "filtros": {
+    "soloVigentes": true,
+    "mostrarDetalle": true
+  },
+  "formato": "PDF"
+}
+
+### Formatos y modos permitidos
+
+- modo: "Por cuenta" | "Completo"
+- formato: "PDF" | "Excel"
+
+### Response (opción A: devuelve URL de descarga)
+
+200
+
+{
+  "message": "Export generado",
+  "downloadUrl": "/api/libro-mayor/exports/exp_01/download",
+  "expiresAt": "2026-02-20T23:59:59Z"
+}
+
+### Response (opción B: devuelve binario directo)
+
+200
+
+- Content-Type: application/pdf  (si formato=PDF)
+- Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet (si formato=Excel)
+- Content-Disposition: attachment; filename="libro_mayor_2025-12.pdf"
+- Body: (binario)
+
+### Reglas de negocio (Backend debe validar)
+
+- `periodo`, `desde`, `hasta` obligatorios y coherentes (mismo mes).
+- `modo` obligatorio.
+- `formato` obligatorio.
+- Si modo="Por cuenta":
+  - `cuentaCodigo` obligatorio y debe ser **Imputable**.
+- Si modo="Completo":
+  - `cuentaCodigo` debe ser null/omitido (backend ignora).
+  - Export incluye todas las imputables, ordenadas por código (recomendación).
+- Si `mostrarDetalle=false`:
+  - Export puede ir resumido (sin líneas) o agregado por día/documento (definir criterio).
+- Si el archivo es muy grande:
+  - backend puede responder 202 y procesar asíncrono (ver siguiente endpoint).
+
+### Errores
+
+- 400: Validación (modo/formato inválido, cuenta requerida, etc.)
+- 403: Sin permisos para exportar
+- 409: Conflicto (período cerrado / bloqueo)
+- 413: Export demasiado grande (si aplicara) o recomendar 202
+
+---
+
+## 1️⃣6️⃣ (Opcional) Export asíncrono: consultar estado y descargar
+
+> Solo si deciden hacerlo asíncrono para “Completo” (recomendado cuando hay muchas cuentas/movimientos).
+
+### 1️⃣6️⃣.1 Crear export asíncrono
+
+POST /api/libro-mayor/exports
+
+Body: mismo que /api/libro-mayor/export
+
+Response 202
+
+{
+  "exportId": "exp_01",
+  "status": "processing"
+}
+
+### 1️⃣6️⃣.2 Consultar estado
+
+GET /api/libro-mayor/exports/{exportId}
+
+Response 200
+
+{
+  "exportId": "exp_01",
+  "status": "processing"  // processing | ready | failed
+}
+
+### 1️⃣6️⃣.3 Descargar
+
+GET /api/libro-mayor/exports/{exportId}/download
+
+Response 200: binario (PDF/Excel)
+Errores:
+- 404: no existe
+- 409: aún no está listo
